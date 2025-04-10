@@ -8,6 +8,11 @@
 #include <thread>
 #include <condition_variable>
 #include<atomic>
+#include<chrono>
+#include <iomanip>
+
+// 日志级别
+enum class LogLevel { INFO, DEBUG, WARNING, ERROR };
 
 //辅助函数，利用原样转发
 template<typename T>
@@ -70,8 +75,17 @@ public:
     }
 
     template<typename... Args>
-    void log(const std::string& format,Args&&... args){
-        m_queue.push(formatMessage(format,std::forward<Args>(args)...));
+    void log(LogLevel level,const std::string& format,Args&&... args){
+        std::string level_str;
+        switch(level) {
+            case LogLevel::INFO: level_str = "[INFO] "; break;
+            case LogLevel::DEBUG: level_str = "[DEBUG] "; break;
+            case LogLevel::ERROR: level_str = "[ERROR] "; break;
+            case LogLevel::WARNING: level_str = "[WARNING] "; break;
+        }
+        
+        std::string time = getTime();
+        m_queue.push(level_str+time+": "+formatMessage(format,std::forward<Args>(args)...));
     }
 
     
@@ -103,23 +117,47 @@ private:
 
        return oss.str();
     }
+
+    std::string getTime(){
+        // 获取当前时间点
+        auto now = std::chrono::system_clock::now();
+        // 转换为time_t
+        auto now_c = std::chrono::system_clock::to_time_t(now);
+        // 转换为tm结构
+        std::tm* now_tm = std::localtime(&now_c);
+
+        // 获取年、月、日
+        int year = now_tm->tm_year + 1900; // tm_year是从1900年开始的年数
+        int month = now_tm->tm_mon + 1;    // tm_mon是从0开始的月份（0表示1月）
+        int day = now_tm->tm_mday;         // tm_mday是1到31的日期
+        int hour = now_tm->tm_hour;
+        int minute = now_tm->tm_min;
+        int second = now_tm->tm_sec;
+
+        std::stringstream ss;
+        ss << year << "-" << std::setw(2) << std::setfill('0') << month << "-" << std::setw(2) << std::setfill('0') << day << " "
+           << std::setw(2) << std::setfill('0') << hour << ":" << std::setw(2) << std::setfill('0') << minute << ":" << std::setw(2) << std::setfill('0') << second;
+        
+        return ss.str();
+    } 
+
 };
 
 int main(){
     try {
         Logger logger("log.txt");
 
-        logger.log("Starting application.");
+        logger.log(LogLevel::INFO,"Starting application.");
 
         int user_id = 42;
         std::string action = "login";
         double duration = 3.5;
         std::string world = "World";
 
-        logger.log("User {} performed {} in {} seconds.", user_id, action, duration);
-        logger.log("Hello {}", world);
-        logger.log("This is a message without placeholders.");
-        logger.log("Multiple placeholders: {}, {}, {}.", 1, 2, 3);
+        logger.log(LogLevel::INFO,"User {} performed {} in {} seconds.", user_id, action, duration);
+        logger.log(LogLevel::DEBUG,"Hello {}", world);
+        logger.log(LogLevel::WARNING,"This is a message without placeholders.");
+        logger.log(LogLevel::ERROR,"Multiple placeholders: {}, {}, {}.", 1, 2, 3);
 
         // 模拟一些延迟以确保后台线程处理完日志
         std::this_thread::sleep_for(std::chrono::seconds(3));

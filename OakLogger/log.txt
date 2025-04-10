@@ -1,1 +1,11 @@
 
+2025-04-10 08:13:04: Starting application.
+2025-04-10 08:13:04: User 42 performed login in 3.5 seconds.
+2025-04-10 08:13:04: Hello World
+2025-04-10 08:13:04: This is a message without placeholders.
+2025-04-10 08:13:04: Multiple placeholders: 1, 2, 3.
+[INFO] 2025-04-10 08:30:50: Starting application.
+[INFO] 2025-04-10 08:30:50: User 42 performed login in 3.5 seconds.
+[DEBUG] 2025-04-10 08:30:50: Hello World
+[WARNING] 2025-04-10 08:30:50: This is a message without placeholders.
+[ERROR] 2025-04-10 08:30:50: Multiple placeholders: 1, 2, 3.
